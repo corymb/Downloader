@@ -66,3 +66,7 @@ if __name__ == "__main__":
     for url in URLS:
         print 'Downloading: %s.gif' % url
         downloader.download_file(url)
+
+        # Benchmarking:
+        # time ./downloader.py:
+        # 4.337
