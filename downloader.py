@@ -31,12 +31,16 @@ URLS = (
         'http://assets.amuniversal.com/a0fc17e0ba2e012fda3c001dd8b71c47',
         'http://assets.amuniversal.com/9f683a80ba2e012fda3c001dd8b71c47',
 )
+DOWNLOAD_DIRECTORY = 'Downloads'
 
 
 class Downloader(object):
     '''
     Simple URL downloader.
     '''
+    def __init__(self):
+        if not os.path.exists(DOWNLOAD_DIRECTORY):
+            os.makedirs(DOWNLOAD_DIRECTORY)
 
     def download_file(self, url):
         '''
@@ -47,11 +51,11 @@ class Downloader(object):
         file_name = os.path.basename(url)
 
         # Pass 'b' to open() to force binary mode (if the system supports it):
-        with open(file_name, "wb") as f:
+        with open('%s/%s.gif' % (DOWNLOAD_DIRECTORY, file_name), "wb") as f:
             while True:
                 # TODO: Put in a check here for system memory before dl.
                 part = asset.read(1024)
-                # Read will return an empty string at EOF:
+                # read() will return an empty string at EOF:
                 if not part:
                     break
                 f.write(part)
@@ -60,5 +64,5 @@ class Downloader(object):
 if __name__ == "__main__":
     downloader = Downloader()
     for url in URLS:
-        print 'Downloading: %s' % url
+        print 'Downloading: %s.gif' % url
         downloader.download_file(url)

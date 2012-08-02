@@ -1,0 +1,10 @@
+# Files to be excluded from the repo:
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+
+# Exclude 'Downloads' folder and GIF files:
+Downloads/
+*.gif
