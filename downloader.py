@@ -17,9 +17,9 @@ __copyright__ = "Copyright (C) 2012 David Bush"
 __license__ = "LGPL 3.0"
 __version__ = "0.1"
 
-# Simple URL downloader.
-
 import os
+import Queue
+import threading
 import urllib2
 
 # A bunch of Calvin and Hobbes comics for testing:
@@ -34,39 +34,69 @@ URLS = (
 DOWNLOAD_DIRECTORY = 'Downloads'
 
 
-class Downloader(object):
+class Downloader(threading.Thread):
     '''
-    Simple URL downloader.
+    Threaded URL downloader.
     '''
-    def __init__(self):
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+
+        # Create 'Downloads' directory if it doesn't exist:
         if not os.path.exists(DOWNLOAD_DIRECTORY):
             os.makedirs(DOWNLOAD_DIRECTORY)
+
+    def run(self):
+        # Override Thread's run() method.
+        while True:
+            url = self.queue.get()
+            self.download_file(url)
+            self.queue.task_done()
 
     def download_file(self, url):
         '''
         Downloads whatever url is passed to it.
         '''
-
         asset = urllib2.urlopen(url)
         file_name = os.path.basename(url)
 
         # Pass 'b' to open() to force binary mode (if the system supports it):
         with open('%s/%s.gif' % (DOWNLOAD_DIRECTORY, file_name), "wb") as f:
-            while True:
                 # TODO: Put in a check here for system memory before dl.
-                part = asset.read(1024)
+            while True:
                 # read() will return an empty string at EOF:
+                part = asset.read(1024)
                 if not part:
                     break
                 f.write(part)
 
+        # TODO: Return download success status
+        # Output to terminal.
+
+
+def main(urls):
+    """
+    Adds urls to queue, instantiates Downloader() class and downloads urls.
+    """
+    queue = Queue.Queue()
+
+    for i in xrange(5):
+        thread = Downloader(queue)
+        thread.setDaemon(True)  # to allow clean exit if cut short.
+        thread.start()
+
+    # TODO: Add memoization.
+    # TODO: Maybe set something up to make number of threads proportional
+    # to len(URLS)
+    [queue.put(url) for url in URLS]
+    # for url in URLS:
+        # queue.put(url)
+
+    queue.join()
 
 if __name__ == "__main__":
-    downloader = Downloader()
-    for url in URLS:
-        print 'Downloading: %s.gif' % url
-        downloader.download_file(url)
-
-        # Benchmarking:
-        # time ./downloader.py:
-        # 4.337
+    main(URLS)
+    # Benchmarking:
+    # time ./downloader.py
+    # 11.514
+    # Why is this slower? Profile it, but suspect GIL thrashing.
